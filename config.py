@@ -8,7 +8,6 @@ load_dotenv()
 
 
 class Settings:
-    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     ELEVENLABS_API_KEY: str = os.getenv("ELEVENLABS_API_KEY", "")
     ELEVENLABS_VOICE_ID: str = os.getenv("ELEVENLABS_VOICE_ID", "")
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
@@ -19,8 +18,6 @@ class Settings:
 
     def validate(self):
         missing = []
-        if not self.OPENAI_API_KEY:
-            missing.append("OPENAI_API_KEY")
         if not self.ELEVENLABS_API_KEY:
             missing.append("ELEVENLABS_API_KEY")
         if not self.GEMINI_API_KEY:
