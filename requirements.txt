@@ -2,8 +2,6 @@ fastapi
 uvicorn[standard]
 sqlalchemy
 psycopg2-binary
-moviepy>=2.0.0
-openai
 google-genai
 python-multipart
 python-dotenv
