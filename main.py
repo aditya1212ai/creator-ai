@@ -9,17 +9,17 @@ from routes import script, voice, image, video, pipeline
 
 app = FastAPI(title="CreatorAI", version="0.1.0")
 
-# Serve generated videos/images/audio so the frontend can preview & download them
-os.makedirs(settings.OUTPUT_DIR, exist_ok=True)
-app.mount("/outputs", StaticFiles(directory=settings.OUTPUT_DIR), name="outputs")
-
-# Flutter app will hit this from a different origin during dev
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # tighten this to your actual app domain before production
-    allow_methods=["*"],
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
+
+os.makedirs(settings.OUTPUT_DIR, exist_ok=True)
+app.mount("/outputs", StaticFiles(directory=settings.OUTPUT_DIR), name="outputs")
 
 app.include_router(script.router)
 app.include_router(voice.router)
