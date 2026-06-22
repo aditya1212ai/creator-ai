@@ -1,24 +1,32 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from typing import Optional, List
 
 from database import get_db
 from models import ReelProject
-from schemas import FullPipelineRequest, FullPipelineResponse
 from services.script_service import generate_script
 from services.voice_service import create_voice
 from services.image_service import generate_images
-from services.video_service import create_video
 
 router = APIRouter(prefix="/pipeline", tags=["pipeline"])
 
 
+class FullPipelineRequest(BaseModel):
+    topic: str
+    num_scenes: Optional[int] = 3
+
+
+class FullPipelineResponse(BaseModel):
+    project_id: int
+    script: str
+    audio_path: str
+    image_paths: List[str]
+    status: str
+
+
 @router.post("/generate-reel", response_model=FullPipelineResponse)
 def generate_reel(payload: FullPipelineRequest, db: Session = Depends(get_db)):
-    """
-    Runs the full pipeline: script -> voice -> images -> video.
-    Persists progress to DB at each step so partial failures are visible
-    and don't silently lose earlier work.
-    """
     project = ReelProject(topic=payload.topic, status="pending")
     db.add(project)
     db.commit()
@@ -40,13 +48,6 @@ def generate_reel(payload: FullPipelineRequest, db: Session = Depends(get_db)):
         project.status = "images_done"
         db.commit()
 
-        video_path = create_video(
-            image_paths, audio_path, output_filename=f"reel_{project.id}.mp4"
-        )
-        project.video_path = video_path
-        project.status = "video_done"
-        db.commit()
-
     except RuntimeError as e:
         project.status = "failed"
         project.error_message = str(e)
@@ -59,17 +60,10 @@ def generate_reel(payload: FullPipelineRequest, db: Session = Depends(get_db)):
     return FullPipelineResponse(
         project_id=project.id,
         script=project.script,
-        audio_path=_to_url_path(project.audio_path),
-        image_paths=[_to_url_path(p) for p in image_paths],
-        video_path=_to_url_path(project.video_path),
+        audio_path=f"/outputs/voice_{project.id}.mp3",
+        image_paths=[f"/outputs/scene{i+1}.jpg" for i in range(len(image_paths))],
         status=project.status,
     )
-
-
-def _to_url_path(local_path: str) -> str:
-    """Converts a local 'outputs/foo.mp4' path to a servable '/outputs/foo.mp4' URL path."""
-    filename = local_path.split("/")[-1].split("\\")[-1]
-    return f"/outputs/{filename}"
 
 
 @router.get("/status/{project_id}")
@@ -82,5 +76,4 @@ def get_pipeline_status(project_id: int, db: Session = Depends(get_db)):
         "topic": project.topic,
         "status": project.status,
         "error_message": project.error_message,
-        "video_path": project.video_path,
     }
