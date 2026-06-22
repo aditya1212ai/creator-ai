@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 
 from database import init_db
 from config import settings
-from routes import script, voice, image, video, pipeline
+from routes import script, voice, image, pipeline
 
 app = FastAPI(title="CreatorAI", version="0.1.0")
 
@@ -24,7 +24,6 @@ app.mount("/outputs", StaticFiles(directory=settings.OUTPUT_DIR), name="outputs"
 app.include_router(script.router)
 app.include_router(voice.router)
 app.include_router(image.router)
-app.include_router(video.router)
 app.include_router(pipeline.router)
 
 
