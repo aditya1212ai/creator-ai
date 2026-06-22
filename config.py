@@ -11,6 +11,7 @@ class Settings:
     ELEVENLABS_API_KEY: str = os.getenv("ELEVENLABS_API_KEY", "")
     ELEVENLABS_VOICE_ID: str = os.getenv("ELEVENLABS_VOICE_ID", "")
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    PEXELS_API_KEY: str = os.getenv("PEXELS_API_KEY", "")
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./creatorai.db")
 
     # Where generated assets get written
